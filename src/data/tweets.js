@@ -1,0 +1,3 @@
+getTredingTopics = function(){
+	
+}
