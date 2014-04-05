@@ -10,6 +10,14 @@
   <script src="lib/jquery.js"></script>
   <script src="lib/kinetic.js"></script>
   <script src="lib/leap.js"></script>
+  <script src="data/tweets.js"></script>
   <script src="ui/main.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function(){
+    	Tweets.getTrendingTopics();
+    	Tweets.getLocatedTweets('#SLSPEPUSA',"37.7833","-122.4167","20");
+    });
+  </script>
 </body>
 </html>
