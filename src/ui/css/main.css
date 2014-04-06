@@ -11,3 +11,14 @@ html {
   bottom: 0;
   left: 0;
 }
+#pointer {
+  position: absolute;
+  z-index: 99999;
+  top: -50px;
+  left: -50px;
+  border-radius: 100px;
+  background: #800080;
+  border: 10px solid #fff;
+  width: 100px;
+  height: 100px;
+}

@@ -2,9 +2,9 @@
 (function() {
   var LAYER_COUNT, MAX_WIDTH, MIN_SWIPE_DELAY, MIN_SWIPE_DISTANCE, SWIPE_INCREMENT_X, asyncLoop, barrier, createImage, createText, debounce, drawAll, fetchAll, images, initController, tweenLayersParallax, tweenToX, tweets;
 
-  MAX_WIDTH = 3000;
+  MAX_WIDTH = 6000;
 
-  MIN_SWIPE_DELAY = 500;
+  MIN_SWIPE_DELAY = 1000;
 
   MIN_SWIPE_DISTANCE = 50;
 
@@ -107,23 +107,21 @@
         }
         w = cur.width;
         h = cur.height;
-        x = Math.round(Math.random() * MAX_WIDTH - MAX_WIDTH / 10 * i);
+        x = Math.round(Math.random() * (MAX_WIDTH - MAX_WIDTH / 3 * i));
         y = Math.round(Math.random() * (win.height - h));
         url = cur.url;
         return createImage(layer, url, w, h, x, y, function(image) {
           var rect;
           layer.add(image);
-          if (i > 0) {
-            rect = new Kinetic.Rect({
-              x: x,
-              y: y,
-              width: w,
-              height: h,
-              fill: '#000',
-              opacity: (light + 1) - 0.3
-            });
-            layer.add(rect);
-          }
+          rect = new Kinetic.Rect({
+            x: x - 1,
+            y: y - 1,
+            width: w + 1,
+            height: h + 1,
+            fill: 'black',
+            opacity: i / 4
+          });
+          layer.add(rect);
           images.push(image);
           layer.draw();
           done();
@@ -248,13 +246,18 @@
   };
 
   initController = function(autoConnect, api) {
-    var controller, onSwipe, swiper;
+    var controller, onSwipe, pointer, swiper, tSwipe;
     controller = new Leap.Controller({
       enableGestures: true
     });
     console.log('Leap Motions start.');
-    onSwipe = debounce(MIN_SWIPE_DELAY, function(data) {
+    tSwipe = 0;
+    onSwipe = function(data) {
       var tx;
+      if (Date.now() - tSwipe < MIN_SWIPE_DELAY) {
+        return;
+      }
+      tSwipe = Date.now();
       tx = data.translation()[0];
       if (Math.abs(tx) > MIN_SWIPE_DISTANCE) {
         if (tx > 0) {
@@ -263,8 +266,20 @@
           return api.onSwipeRight();
         }
       }
-    });
+    };
     swiper = controller.gesture('swipe').update(onSwipe);
+    pointer = $('#pointer');
+    controller.on('frame', function(frame) {
+      var finger, s, x, y, _ref;
+      finger = (_ref = frame.pointables) != null ? _ref[0] : void 0;
+      if (finger == null) {
+        return;
+      }
+      x = window.innerWidth / 2 + finger.tipPosition[0] * 7;
+      y = window.innerHeight - finger.tipPosition[1] * 5 + 250;
+      s = finger.tipPosition[2] / 60;
+      return pointer.css('transform', "translate3d(" + x + "px, " + y + "px, 0px) scale(" + s + ", " + s + ")");
+    });
     $(window).on('keyup', function(event) {
       if (event.which === 39) {
         return api.onSwipeLeft();
