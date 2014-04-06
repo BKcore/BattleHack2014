@@ -1,3 +1,11 @@
+/* apply a natural box layout model to all elements */
+*,
+*:before,
+*:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
 body,
 html {
   margin: 0;
@@ -10,4 +18,43 @@ html {
   right: 0;
   bottom: 0;
   left: 0;
+}
+#pointer {
+  position: absolute;
+  z-index: 99999;
+  top: -50px;
+  left: -50px;
+  border-radius: 100px;
+  background: #800080;
+  border: 10px solid #fff;
+  width: 100px;
+  height: 100px;
+}
+.menu {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-around;
+  margin-top: 2.5%;
+}
+.menu .menuitem {
+  height: 45%;
+  width: 45%;
+  overflow: hidden;
+  text-align: right;
+  position: relative;
+}
+.menu .menuitem i {
+  font-size: 18em;
+  color: rgba(255,255,255,0.3);
+  margin-right: 3%;
+  margin-top: 3%;
+}
+.menu .menuitem b {
+  font-family: Helvetica, Arial;
+  position: absolute;
+  left: 3%;
+  top: 3%;
+  color: rgba(255,255,255,0.6);
+  font-size: 4em;
+  text-align: left;
 }

@@ -1,5 +1,5 @@
-MAX_WIDTH = 3000
-MIN_SWIPE_DELAY = 500
+MAX_WIDTH = 6000
+MIN_SWIPE_DELAY = 1000
 MIN_SWIPE_DISTANCE = 50
 SWIPE_INCREMENT_X = window.innerWidth
 LAYER_COUNT = 3
@@ -74,21 +74,20 @@ drawAll = ->
         # url = "http://placekitten.com/#{w}/#{h}"
         w = cur.width
         h = cur.height
-        x = Math.round Math.random() * MAX_WIDTH - MAX_WIDTH/10 * i
+        x = Math.round Math.random() * (MAX_WIDTH - MAX_WIDTH/3 * (i))
         y = Math.round Math.random() * (win.height - h)
         url = cur.url
         createImage layer, url, w, h, x, y, (image) ->
           layer.add image
-          if i > 0
-            rect = new Kinetic.Rect(
-              x: x
-              y: y
-              width: w
-              height: h
-              fill: '#000'
-              opacity: (light + 1) - 0.3
-            )
-            layer.add rect
+          rect = new Kinetic.Rect(
+            x: x-1
+            y: y-1
+            width: w+1
+            height: h+1
+            fill: 'black'
+            opacity: i / 4
+          )
+          layer.add rect
           # if i > 0
           #   image.cache()
           #   image.filters [Kinetic.Filters.Brighten]
@@ -110,6 +109,10 @@ drawAll = ->
     onSwipeRight: ->
       console.log 'SWIPE RIGHT'
       tweenLayersParallax layers, +SWIPE_INCREMENT_X
+
+    onSwipeVertical: ->
+      console.log 'SWIPE VERTICAL'
+      location.href = 'index.html'
 
 # Stupid underscore arg ordering
 debounce = (time, fn) -> _.debounce fn, time
@@ -190,15 +193,31 @@ tweenLayersParallax = (layers, step) ->
 initController = (autoConnect, api) ->
   controller = new Leap.Controller(enableGestures: true)
   console.log 'Leap Motions start.'
+  tSwipe = 0
 
-  onSwipe = debounce MIN_SWIPE_DELAY, (data) ->
+  onSwipe = (data) ->
+    if Date.now() - tSwipe < MIN_SWIPE_DELAY
+      return
+    tSwipe = Date.now()
     tx = data.translation()[0]
+    ty = data.translation()[1]
     if Math.abs(tx) > MIN_SWIPE_DISTANCE
       if tx > 0
         api.onSwipeLeft()
       else
         api.onSwipeRight()
+    if Math.abs(ty) > MIN_SWIPE_DISTANCE * 1.5
+      api.onSwipeVertical()
   swiper = controller.gesture('swipe').update onSwipe
+
+  pointer = $('#pointer')
+  controller.on 'frame', (frame) ->
+    finger = frame.pointables?[0]
+    return if not finger?
+    x = window.innerWidth/2 + finger.tipPosition[0]*7
+    y = window.innerHeight - finger.tipPosition[1]*5 + 250
+    s = finger.tipPosition[2] / 60
+    pointer.css 'transform', "translate3d(#{x}px, #{y}px, 0px) scale(#{s}, #{s})"
 
   $(window).on 'keyup', (event) ->
     if event.which is 39 # RIGHT
