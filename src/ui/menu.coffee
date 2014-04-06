@@ -20,15 +20,17 @@ drawAll = ->
     width: window.innerWidth
     height: window.innerHeight
 
-  stage = new Kinetic.Stage(
-    container: 'main'
-    width: win.width
-    height: win.height
-  )
+  $('.menuitem').on 'click', ->
+    loc = $(this).attr('data-location')
+    console.log loc
+    return if not loc?
+    location.href = loc
 
   initController true,
     onTouch: (x, y) ->
-      console.log 'TOUCH', x, y
+      el = document.elementFromPoint(x, y)
+      console.log 'TOUCH', x, y, el
+      $(el)?.trigger 'click'
 
 # Stupid underscore arg ordering
 debounce = (time, fn) -> _.debounce fn, time
@@ -48,10 +50,13 @@ initController = (autoConnect, api) ->
     s = finger.tipPosition[2] / 60
     pointer.css 'transform', "translate3d(#{x}px, #{y}px, 0px) scale(#{s}, #{s})"
     if finger.tipPosition[2] < 0
-      console.log 'HAY'
       if Date.now() - tTouch > MIN_TOUCH_DELAY
         tTouch = Date.now()
-        api.onTouch(x, y)
+        pointer.hide()
+        setTimeout (->
+          api.onTouch(x, y)
+          pointer.show()
+        ), 0
     return
 
 

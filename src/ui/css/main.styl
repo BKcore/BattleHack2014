@@ -1,3 +1,22 @@
+/* apply a natural box layout model to all elements */
+*,
+*:before,
+*:after
+  -moz-box-sizing: border-box
+  -webkit-box-sizing: border-box
+  box-sizing: border-box
+
+flex-init(direction)
+  display: flex
+  flex-flow: direction nowrap
+
+flex-wrap(direction)
+  display: flex
+  flex-flow: direction wrap
+
+flex-fill()
+  flex: 1
+
 body, html
   margin: 0
   padding: 0
@@ -20,3 +39,31 @@ body, html
   border: 10px solid white
   width: 100px
   height: 100px
+
+.menu
+  flex-wrap(row)
+  justify-content: space-around
+  margin-top: 2.5%
+
+  .menuitem
+    height: 45%
+    width: 45%
+    overflow: hidden
+    text-align: right
+    position: relative
+
+    i
+      font-size: 18em
+      color: rgba(255,255,255,0.3)
+      margin-right: 3%
+      margin-top: 3%
+
+    b
+      font-family: Helvetica, Arial
+      position: absolute
+      left: 3%
+      top: 3%
+      color: rgba(255,255,255,0.6)
+      font-size: 4em
+      text-align: left
+

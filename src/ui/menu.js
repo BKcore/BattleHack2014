@@ -21,7 +21,7 @@
   });
 
   drawAll = function() {
-    var stage, viewport, win;
+    var viewport, win;
     viewport = {
       x: 0,
       y: 0
@@ -30,14 +30,21 @@
       width: window.innerWidth,
       height: window.innerHeight
     };
-    stage = new Kinetic.Stage({
-      container: 'main',
-      width: win.width,
-      height: win.height
+    $('.menuitem').on('click', function() {
+      var loc;
+      loc = $(this).attr('data-location');
+      console.log(loc);
+      if (loc == null) {
+        return;
+      }
+      return location.href = loc;
     });
     return initController(true, {
       onTouch: function(x, y) {
-        return console.log('TOUCH', x, y);
+        var el, _ref;
+        el = document.elementFromPoint(x, y);
+        console.log('TOUCH', x, y, el);
+        return (_ref = $(el)) != null ? _ref.trigger('click') : void 0;
       }
     });
   };
@@ -65,10 +72,13 @@
       s = finger.tipPosition[2] / 60;
       pointer.css('transform', "translate3d(" + x + "px, " + y + "px, 0px) scale(" + s + ", " + s + ")");
       if (finger.tipPosition[2] < 0) {
-        console.log('HAY');
         if (Date.now() - tTouch > MIN_TOUCH_DELAY) {
           tTouch = Date.now();
-          api.onTouch(x, y);
+          pointer.hide();
+          setTimeout((function() {
+            api.onTouch(x, y);
+            return pointer.show();
+          }), 0);
         }
       }
     });

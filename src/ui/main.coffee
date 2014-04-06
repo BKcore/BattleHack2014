@@ -110,6 +110,10 @@ drawAll = ->
       console.log 'SWIPE RIGHT'
       tweenLayersParallax layers, +SWIPE_INCREMENT_X
 
+    onSwipeVertical: ->
+      console.log 'SWIPE VERTICAL'
+      location.href = 'index.html'
+
 # Stupid underscore arg ordering
 debounce = (time, fn) -> _.debounce fn, time
 
@@ -196,11 +200,14 @@ initController = (autoConnect, api) ->
       return
     tSwipe = Date.now()
     tx = data.translation()[0]
+    ty = data.translation()[1]
     if Math.abs(tx) > MIN_SWIPE_DISTANCE
       if tx > 0
         api.onSwipeLeft()
       else
         api.onSwipeRight()
+    if Math.abs(ty) > MIN_SWIPE_DISTANCE * 1.5
+      api.onSwipeVertical()
   swiper = controller.gesture('swipe').update onSwipe
 
   pointer = $('#pointer')

@@ -144,6 +144,10 @@
       onSwipeRight: function() {
         console.log('SWIPE RIGHT');
         return tweenLayersParallax(layers, +SWIPE_INCREMENT_X);
+      },
+      onSwipeVertical: function() {
+        console.log('SWIPE VERTICAL');
+        return location.href = 'index.html';
       }
     });
   };
@@ -253,18 +257,22 @@
     console.log('Leap Motions start.');
     tSwipe = 0;
     onSwipe = function(data) {
-      var tx;
+      var tx, ty;
       if (Date.now() - tSwipe < MIN_SWIPE_DELAY) {
         return;
       }
       tSwipe = Date.now();
       tx = data.translation()[0];
+      ty = data.translation()[1];
       if (Math.abs(tx) > MIN_SWIPE_DISTANCE) {
         if (tx > 0) {
-          return api.onSwipeLeft();
+          api.onSwipeLeft();
         } else {
-          return api.onSwipeRight();
+          api.onSwipeRight();
         }
+      }
+      if (Math.abs(ty) > MIN_SWIPE_DISTANCE * 1.5) {
+        return api.onSwipeVertical();
       }
     };
     swiper = controller.gesture('swipe').update(onSwipe);
