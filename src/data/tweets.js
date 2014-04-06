@@ -125,9 +125,9 @@ var Tweets  = {
 			promoted_content: null
 			}];
 			var trending_topics = data;
-			console.log("ahahahaha", data);
 			for(var i=0;i<trending_topics.length-1;i++){
-				var tweets =Tweets.getTweetsByTag(trending_topics[i],nb,function(tweets_data){
+				console.log('trending',trending_topics[i]);
+				var tweets =Tweets.getTweetsByTag(trending_topics[i].name,nb,function(tweets_data){
 					all_tweets= all_tweets.concat(tweets_data);
 					allDone();
 				});
