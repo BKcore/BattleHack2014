@@ -17,12 +17,17 @@ var Tweets  = {
 	        }
 		});
 	},
-	getLocatedTweets: function(query,lat,lon,radius,cb){
+	getLocatedTweets: function(query,nb,cb){
+		var lat =37.7833;
+		var lon = -122.4167;
+		var radius = 5;
 		console.log(query);
 		var api_url = api_root+"search/tweets.json";
 		api_url+="?q="+encodeURIComponent(query);
 		var geoloc = lat+","+lon+","+radius+"km"
 		api_url+="&geocode="+encodeURIComponent(geoloc);
+		api_url+="&count="+nb;
+		api_url+="&result_type=popular";
 		console.log(api_url);
 		$.ajax({
 	        type: "GET",
@@ -42,6 +47,8 @@ var Tweets  = {
 		var api_url = api_root+"search/tweets.json";
 		api_url+="?q="+encodeURIComponent(query);
 		api_url+="&count="+nb;
+		api_url+="&result_type=popular";
+		console.log("getTweetsByTag", api_url);
 		$.ajax({
 	        type: "GET",
 	        url: api_url,
@@ -127,7 +134,7 @@ var Tweets  = {
 			var trending_topics = data;
 			for(var i=0;i<trending_topics.length-1;i++){
 				console.log('trending',trending_topics[i]);
-				var tweets =Tweets.getTweetsByTag(trending_topics[i].name,nb,function(tweets_data){
+				var tweets =Tweets.getLocatedTweets(trending_topics[i].name,nb,function(tweets_data){
 					all_tweets= all_tweets.concat(tweets_data);
 					allDone();
 				});
