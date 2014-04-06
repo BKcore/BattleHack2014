@@ -58,3 +58,7 @@ html {
   font-size: 4em;
   text-align: left;
 }
+.maps {
+  background: #000 url("fakemaps.jpg") no-repeat center center;
+  background-size: cover;
+}
