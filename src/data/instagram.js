@@ -83,7 +83,7 @@ var Instagram = {
 		});
 	},
 
-	getManyMedia: function(cb,nb){
+	getManyMedia: function(nb, cb){
 		var all_media=[];
 		var allInstagramDone = barrier(9,function(){
 			console.log("ALL media", all_media);

@@ -15,10 +15,10 @@ fetchAll = (cb) ->
   maybeAllFetchDone = barrier 2, ->
     console.log 'HAY', images, tweets
     cb()
-  Instagram.searchMediaByTag 'SLSPEPUSA', (data) ->
+  Instagram.getManyMedia 3, (data) ->
     images = (e.images.low_resolution for e in data)
     maybeAllFetchDone()
-  Tweets.getLocatedTweets '#SLSPEPUSA', "37.7833", "-122.4167", "20", (data) ->
+  Tweets.getManyTweets 4, (data) ->
     tweets = ([e.user.screen_name, e.text] for e in data)
     maybeAllFetchDone()
   return
@@ -61,7 +61,8 @@ drawAll = ->
           x = Math.round Math.random() * (MAX_WIDTH - MAX_WIDTH/SWIPE_INCREMENT_X/3 * i)
           y = Math.round Math.random() * (win.height - 100)
           text = "@#{ tweet[0] }: #{ tweet[1] }"
-          createText layer, text, 300, 100, x, y, light + 1
+          console.log t + i * tweetsPerLayer, text
+          createText layer, text, 350, 100, x, y, light + 1
         layer.draw()
         return
 
@@ -127,7 +128,7 @@ asyncLoop = (count, fn) ->
     ), 0
   done()
 
-barrier = (count, fn) ->
+window.barrier = barrier = (count, fn) ->
   c = 0
   return ->
     c = c + 1
@@ -167,7 +168,7 @@ createText = (layer, text, w, h, x, y, opacity) ->
     opacity: opacity
     fill: '#fff'
     fontFamily: 'Helvetica'
-    fontSize: 24
+    fontSize: 22
     padding: 20
     text: text
   )
