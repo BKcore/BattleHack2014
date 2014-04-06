@@ -2,6 +2,7 @@ MAX_WIDTH = 3000
 MIN_SWIPE_DELAY = 500
 MIN_SWIPE_DISTANCE = 50
 SWIPE_INCREMENT_X = window.innerWidth
+LAYER_COUNT = 3
 
 $ ->
 
@@ -19,41 +20,75 @@ $ ->
     height: win.height
   )
 
-  layer = new Kinetic.Layer()
-  stage.add layer
-
+  layers = []
   images = []
-  for i in [0..40]
-    w = Math.round Math.random() * 300 + 200
-    h = Math.round Math.random() * 300 + 100
-    x = Math.round Math.random() * MAX_WIDTH
-    y = Math.round Math.random() * (win.height - h)
-    url = "http://placekitten.com/#{w}/#{h}"
-    createImage layer, url, w, h, x, y, (image) ->
-      layer.add image
-      layer.draw()
-      images.push image
 
-  tween = null
+  for i in [0...LAYER_COUNT]
+    do (i) ->
+      light = (LAYER_COUNT - i / 1.2) / LAYER_COUNT
+      layer = new Kinetic.Layer()
+      stage.add layer
+      layers.push
+        layer: layer
+        x: 0
+        tween: null
+
+      maybeAllDone = barrier 10, ->
+        console.log 'layer', i, 'done'
+
+      asyncLoop 10, (k, done) ->
+        console.log 'layer', i, 'image', k
+        w = Math.round Math.random() * 300 + 200
+        h = Math.round Math.random() * 300 + 100
+        x = Math.round Math.random() * MAX_WIDTH - MAX_WIDTH/10 * i
+        y = Math.round Math.random() * (win.height - h)
+        url = "http://placekitten.com/#{w}/#{h}"
+        createImage layer, url, w, h, x, y, (image) ->
+          layer.add image
+          if i > 0 and false
+            image.cache()
+            image.filters [Kinetic.Filters.Brighten]
+            image.brightness -0.6 + light
+          images.push image
+          layer.draw()
+          done()
+          maybeAllDone()
+
+  for i in [LAYER_COUNT-1..0]
+    layers[i].layer.moveToTop()
+
+  tweens = null
   initController true,
     onSwipeLeft: ->
       console.log 'SWIPE LEFT'
-      viewport.x -= SWIPE_INCREMENT_X
-      tween?.finish()
-      tween = tweenTo layer, viewport.x, viewport.y, 600
-      tween.play()
+      tweenLayersParallax layers, -SWIPE_INCREMENT_X
+
     onSwipeRight: ->
       console.log 'SWIPE RIGHT'
-      viewport.x += SWIPE_INCREMENT_X
-      tween?.finish()
-      tween = tweenTo layer, viewport.x, viewport.y, 600
-      tween.play()
+      tweenLayersParallax layers, +SWIPE_INCREMENT_X
 
 # Stupid underscore arg ordering
 debounce = (time, fn) -> _.debounce fn, time
 
+asyncLoop = (count, fn) ->
+  c = 0
+  done = ->
+    setTimeout (->
+      return if c > count
+      fn c, done
+      c++
+    ), 0
+  done()
+
+barrier = (count, fn) ->
+  c = 0
+  return ->
+    return if c++ < count
+    fn()
+
 createImage = (layer, url, w, h, x, y, cb) ->
   img = new Image()
+  img.crossOrigin = "Anonymous"
   img.onload = ->
     cb new Kinetic.Image(
       x: x
@@ -61,17 +96,27 @@ createImage = (layer, url, w, h, x, y, cb) ->
       image: img
       width: w,
       height: h
+      shadowColor: 'black',
+      shadowBlur: 30,
+      shadowOpacity: 0.8
     )
   img.src = url
 
-tweenTo = (obj, x, y, duration) ->
+tweenToX = (obj, x, duration) ->
   return new Kinetic.Tween(
     node: obj
     x: x
-    y: y
     duration: duration / 1000
     easing: Kinetic.Easings.StrongEaseOut
   )
+
+tweenLayersParallax = (layers, step) ->
+  for layer, i in layers
+    layer.x += step - step/3 * i
+    layer.tween?.finish()
+    layer.tween = tweenToX layer.layer, layer.x, 600
+    layer.tween.play()
+  return
 
 initController = (autoConnect, api) ->
   controller = new Leap.Controller()
