@@ -5,23 +5,17 @@ MIN_TOUCH_DELAY = 2000
 SWIPE_INCREMENT_X = window.innerWidth
 LAYER_COUNT = 1
 
-images = null
-tweets = []
+items = null
 
 $ ->
   fetchAll ->
     drawAll()
 
 fetchAll = (cb) ->
-  maybeAllFetchDone = barrier 2, ->
-    console.log 'HAY', images, tweets
+  Events.getConcerts 37.7833, -122.4167, (data) ->
+    items = ([e.title, e.performers[0].image, e.venue.name, e.datetime_local, e.stats.lowest_price ? (Math.random()*40+10)] for e in data when e.performers[0].image?)
+    console.log items
     cb()
-  Instagram.getManyMedia 3, (data) ->
-    images = (e.images.low_resolution for e in data)
-    maybeAllFetchDone()
-  Tweets.getManyTweets 4, (data) ->
-    tweets = ([e.user.screen_name, e.text] for e in data)
-    maybeAllFetchDone()
   return
 
 drawAll = ->
@@ -41,8 +35,7 @@ drawAll = ->
   )
 
   layers = []
-  imagesPerLayer = Math.floor(images.length / LAYER_COUNT)
-  tweetsPerLayer = Math.floor(tweets.length / LAYER_COUNT)
+  imagesPerLayer = Math.floor(items.length-1 / LAYER_COUNT)
 
   for i in [0...LAYER_COUNT]
     do (i) ->
@@ -55,54 +48,69 @@ drawAll = ->
         x: 0
         tween: null
 
-      maybeAllDone = barrier imagesPerLayer+1, ->
-        for t in [0...tweetsPerLayer]
-          tweet = tweets[t + i * tweetsPerLayer]
-          throw new Error('Moche tweet') if not tweet?
-          x = Math.round Math.random() * (MAX_WIDTH - MAX_WIDTH/SWIPE_INCREMENT_X/3 * i)
-          y = Math.round Math.random() * (win.height - 100)
-          text = "@#{ tweet[0] }: #{ tweet[1] }"
-          console.log t + i * tweetsPerLayer, text
-          createText layer, text, 350, 100, x, y, light + 1
-        layer.draw()
-        return
-
       nx = 0
 
       asyncLoop imagesPerLayer, (k, done) ->
         console.log 'layer', i, 'image', k, '/', imagesPerLayer
-        cur = images[k + i * imagesPerLayer]
+        cur = items[k]
         throw new Error('Moche image') if not cur?
         # w = Math.round Math.random() * 300 + 200
         # h = Math.round Math.random() * 300 + 100
         # url = "http://placekitten.com/#{w}/#{h}"
-        w = cur.width
-        h = cur.height
+        w = 500
+        h = 400
         x = nx
         nx += w + 20
         y = 100
-        url = cur.url
+        url = cur[1]
         createImage layer, url, w, h, x, y, (image) ->
           layer.add image
+          rect2 = new Kinetic.Rect(
+            x: x-1
+            y: y-1
+            width: w+1
+            height: 100
+            fill: 'black'
+            opacity: 0.4
+          )
+          layer.add rect2
+          text = new Kinetic.Text(
+            x: x
+            y: y
+            width: w
+            height: h
+            opacity: 1
+            fill: '#fff'
+            fontFamily: 'Helvetica'
+            fontSize: 20
+            padding: 20
+            shadowColor: 'black'
+            shadowBlur: 20
+            shadowOpacity: 0.7
+            text: cur[0] + "\n" + cur[2] + "\n" + cur[3]
+          )
+          layer.add text
           rect = new Kinetic.Rect(
             x: x-1
             y: y-1
             width: w+1
             height: h+1
             fill: 'black'
-            opacity: i / 4
+            opacity: 0
           )
           rect.on 'mousedown', ->
-            console.log 'YOUHOU'
+#             $('#popup .more').append($("<script src='https://www.paypalobjects.com/js/external/paypal-button.min.js?merchant=nicolas@3scale.net' data-button='qr' data-name='Product via QR code' data-quantity='1' data-amount='#{cur[4]?.toFixed(2)}' data-currency='USD' data-shipping='0' data-tax='0' data-callback='http://localhost.com' data-env='sandbox'
+# ></script>"))
+            $('#popup .title').text(cur[0])
+            $('#popup .price').text('$'+cur[4]?.toFixed(2))
+            $('#popup').show()
           layer.add rect
           # if i > 0
           #   image.cache()
           #   image.filters [Kinetic.Filters.Brighten]
           #   image.brightness light
-          images.push image
           layer.draw()
           done()
-          maybeAllDone()
 
   for i in [LAYER_COUNT-1..0]
     layers[i].layer.moveToTop()
