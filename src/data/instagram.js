@@ -15,7 +15,7 @@ var Instagram = {
 		// 	'preset':"igAccesToken",
 		// 	'inputs': [{'name':"Latitude", 'value':lat},{'name':"Longitude", 'value':lon}]
 		// };
-		
+
 		// $.ajax({
 	 //        type: "POST",
 	 //        url: api_url,
@@ -58,7 +58,7 @@ var Instagram = {
 		});
 	},
 
-	searchMediaByTag: function(tag){
+	searchMediaByTag: function(tag, cb){
 	  //No # or %23 character
 	  tag = tag.replace('#','');
 	  tag = tag.replace('%23','');
@@ -73,7 +73,7 @@ var Instagram = {
 	        dataType: "jsonp",
 	        success: function (response, status, xhr) {
               console.log(response);
-              return response.data;
+              return cb(response.data);
 	        },
 	        error: function (xhr, err) {
 	          console.log(xhr);

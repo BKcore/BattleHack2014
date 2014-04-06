@@ -4,7 +4,26 @@ MIN_SWIPE_DISTANCE = 50
 SWIPE_INCREMENT_X = window.innerWidth
 LAYER_COUNT = 3
 
+images = null
+tweets = []
+
 $ ->
+  fetchAll ->
+    drawAll()
+
+fetchAll = (cb) ->
+  maybeAllFetchDone = barrier 2, ->
+    console.log 'HAY', images, tweets
+    cb()
+  Instagram.searchMediaByTag 'SLSPEPUSA', (data) ->
+    images = (e.images.low_resolution for e in data)
+    maybeAllFetchDone()
+  Tweets.getLocatedTweets '#SLSPEPUSA', "37.7833", "-122.4167", "20", (data) ->
+    tweets = ([e.user.screen_name, e.text] for e in data)
+    maybeAllFetchDone()
+  return
+
+drawAll = ->
 
   viewport =
     x: 0
@@ -21,12 +40,13 @@ $ ->
   )
 
   layers = []
-  images = []
+  imagesPerLayer = Math.floor(images.length / LAYER_COUNT)
+  tweetsPerLayer = Math.floor(tweets.length / LAYER_COUNT)
 
   for i in [0...LAYER_COUNT]
     do (i) ->
+
       light = -(i / LAYER_COUNT)
-      console.log 'AAAAA', light, light * 255
       layer = new Kinetic.Layer()
       stage.add layer
       layers.push
@@ -34,29 +54,45 @@ $ ->
         x: 0
         tween: null
 
-      maybeAllDone = barrier 10, ->
-        console.log 'layer', i, 'done'
-        for t in [0..10]
-          x = Math.round Math.random() * MAX_WIDTH - MAX_WIDTH/10 * i
+      maybeAllDone = barrier imagesPerLayer+1, ->
+        for t in [0...tweetsPerLayer]
+          tweet = tweets[t + i * tweetsPerLayer]
+          throw new Error('Moche tweet') if not tweet?
+          x = Math.round Math.random() * (MAX_WIDTH - MAX_WIDTH/SWIPE_INCREMENT_X/3 * i)
           y = Math.round Math.random() * (win.height - 100)
-          createText layer, "Lorem ipsum dolor sit ames et bla bla j'ai oublié le reste oulalaa.",
-            200, 100, x, y, light + 1
+          text = "@#{ tweet[0] }: #{ tweet[1] }"
+          createText layer, text, 300, 100, x, y, light + 1
         layer.draw()
         return
 
-      asyncLoop 10, (k, done) ->
-        console.log 'layer', i, 'image', k
-        w = Math.round Math.random() * 300 + 200
-        h = Math.round Math.random() * 300 + 100
+      asyncLoop imagesPerLayer, (k, done) ->
+        console.log 'layer', i, 'image', k, '/', imagesPerLayer
+        cur = images[k + i * imagesPerLayer]
+        throw new Error('Moche image') if not cur?
+        # w = Math.round Math.random() * 300 + 200
+        # h = Math.round Math.random() * 300 + 100
+        # url = "http://placekitten.com/#{w}/#{h}"
+        w = cur.width
+        h = cur.height
         x = Math.round Math.random() * MAX_WIDTH - MAX_WIDTH/10 * i
         y = Math.round Math.random() * (win.height - h)
-        url = "http://placekitten.com/#{w}/#{h}"
+        url = cur.url
         createImage layer, url, w, h, x, y, (image) ->
           layer.add image
           if i > 0
-            image.cache()
-            image.filters [Kinetic.Filters.Brighten]
-            image.brightness light
+            rect = new Kinetic.Rect(
+              x: x
+              y: y
+              width: w
+              height: h
+              fill: '#000'
+              opacity: (light + 1) - 0.3
+            )
+            layer.add rect
+          # if i > 0
+          #   image.cache()
+          #   image.filters [Kinetic.Filters.Brighten]
+          #   image.brightness light
           images.push image
           layer.draw()
           done()
@@ -91,12 +127,13 @@ asyncLoop = (count, fn) ->
 barrier = (count, fn) ->
   c = 0
   return ->
-    return if c++ < count
+    c = c + 1
+    return if c < count
     fn()
 
 createImage = (layer, url, w, h, x, y, cb) ->
   img = new Image()
-  img.crossOrigin = "Anonymous"
+  # img.crossOrigin = "Anonymous"
   img.onload = ->
     cb new Kinetic.Image(
       x: x
@@ -111,7 +148,6 @@ createImage = (layer, url, w, h, x, y, cb) ->
   img.src = url
 
 createText = (layer, text, w, h, x, y, opacity) ->
-  console.log 'createText', arguments
   rect = new Kinetic.Rect(
     x: x
     y: y
@@ -152,12 +188,11 @@ tweenLayersParallax = (layers, step) ->
   return
 
 initController = (autoConnect, api) ->
-  controller = new Leap.Controller()
+  controller = new Leap.Controller(enableGestures: true)
   console.log 'Leap Motions start.'
 
   onSwipe = debounce MIN_SWIPE_DELAY, (data) ->
     tx = data.translation()[0]
-    console.log tx
     if Math.abs(tx) > MIN_SWIPE_DISTANCE
       if tx > 0
         api.onSwipeLeft()
@@ -165,5 +200,15 @@ initController = (autoConnect, api) ->
         api.onSwipeRight()
   swiper = controller.gesture('swipe').update onSwipe
 
+  $(window).on 'keyup', (event) ->
+    if event.which is 39 # RIGHT
+      api.onSwipeLeft()
+    else if event.which is 37 # LEFT
+      api.onSwipeRight()
+
+  controller.on('connect', -> console.log 'Leap Motion Server connected.')
+  controller.on('disconnect', -> console.log 'Leap Motion Server disconnected.')
+  controller.on('deviceConnect', -> console.log 'Leap Motion connected.')
+  controller.on('deviceDisconnect', -> console.log 'Leap Motion disconnected.')
+
   controller.connect() if autoConnect
-# http://placekitten.com/200/300

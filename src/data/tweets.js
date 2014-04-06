@@ -18,7 +18,7 @@ var Tweets  = {
 	        }
 		});
 	},
-	getLocatedTweets: function(query,lat,lon,radius){
+	getLocatedTweets: function(query,lat,lon,radius,cb){
 		console.log(query);
 		var api_url = api_root+"search/tweets.json";
 		api_url+="?q="+encodeURIComponent(query);
@@ -30,7 +30,7 @@ var Tweets  = {
 	        url: api_url,
 	        dataType: "jsonp",
 	        success: function (response, status, xhr) {
-              console.log(response.statuses);
+              cb(response.statuses);
 	        },
 	        error: function (xhr, err) {
 	          console.log(xhr);
