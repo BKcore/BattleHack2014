@@ -25,7 +25,8 @@ $ ->
 
   for i in [0...LAYER_COUNT]
     do (i) ->
-      light = (LAYER_COUNT - i / 1.2) / LAYER_COUNT
+      light = -(i / LAYER_COUNT)
+      console.log 'AAAAA', light, light * 255
       layer = new Kinetic.Layer()
       stage.add layer
       layers.push
@@ -35,6 +36,13 @@ $ ->
 
       maybeAllDone = barrier 10, ->
         console.log 'layer', i, 'done'
+        for t in [0..10]
+          x = Math.round Math.random() * MAX_WIDTH - MAX_WIDTH/10 * i
+          y = Math.round Math.random() * (win.height - 100)
+          createText layer, "Lorem ipsum dolor sit ames et bla bla j'ai oublié le reste oulalaa.",
+            200, 100, x, y, light + 1
+        layer.draw()
+        return
 
       asyncLoop 10, (k, done) ->
         console.log 'layer', i, 'image', k
@@ -45,10 +53,10 @@ $ ->
         url = "http://placekitten.com/#{w}/#{h}"
         createImage layer, url, w, h, x, y, (image) ->
           layer.add image
-          if i > 0 and false
+          if i > 0
             image.cache()
             image.filters [Kinetic.Filters.Brighten]
-            image.brightness -0.6 + light
+            image.brightness light
           images.push image
           layer.draw()
           done()
@@ -94,13 +102,38 @@ createImage = (layer, url, w, h, x, y, cb) ->
       x: x
       y: y
       image: img
-      width: w,
+      width: w
       height: h
-      shadowColor: 'black',
-      shadowBlur: 30,
+      shadowColor: 'black'
+      shadowBlur: 30
       shadowOpacity: 0.8
     )
   img.src = url
+
+createText = (layer, text, w, h, x, y, opacity) ->
+  console.log 'createText', arguments
+  rect = new Kinetic.Rect(
+    x: x
+    y: y
+    width: w
+    height: h
+    fill: '#000'
+    opacity: opacity - 0.3
+  )
+  obj = new Kinetic.Text(
+    x: x
+    y: y
+    width: w
+    height: h
+    opacity: opacity
+    fill: '#fff'
+    fontFamily: 'Helvetica'
+    fontSize: 24
+    padding: 20
+    text: text
+  )
+  layer.add rect
+  layer.add obj
 
 tweenToX = (obj, x, duration) ->
   return new Kinetic.Tween(
