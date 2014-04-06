@@ -55,7 +55,7 @@ var Tweets  = {
 	        }
 		});
 	},
-	getManyTweets: function(cb,nb){
+	getManyTweets: function(nb, cb){
 		var all_tweets=[];
 		var allDone = barrier(9,function(){
 			console.log("ALL TWEETS", all_tweets);

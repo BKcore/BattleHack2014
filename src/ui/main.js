@@ -28,7 +28,7 @@
       console.log('HAY', images, tweets);
       return cb();
     });
-    Instagram.searchMediaByTag('SLSPEPUSA', function(data) {
+    Instagram.getManyMedia(3, function(data) {
       var e;
       images = (function() {
         var _i, _len, _results;
@@ -41,7 +41,7 @@
       })();
       return maybeAllFetchDone();
     });
-    Tweets.getLocatedTweets('#SLSPEPUSA', "37.7833", "-122.4167", "20", function(data) {
+    Tweets.getManyTweets(4, function(data) {
       var e;
       tweets = (function() {
         var _i, _len, _results;
@@ -94,7 +94,8 @@
           x = Math.round(Math.random() * (MAX_WIDTH - MAX_WIDTH / SWIPE_INCREMENT_X / 3 * i));
           y = Math.round(Math.random() * (win.height - 100));
           text = "@" + tweet[0] + ": " + tweet[1];
-          createText(layer, text, 300, 100, x, y, light + 1);
+          console.log(t + i * tweetsPerLayer, text);
+          createText(layer, text, 350, 100, x, y, light + 1);
         }
         layer.draw();
       });
@@ -171,7 +172,7 @@
     return done();
   };
 
-  barrier = function(count, fn) {
+  window.barrier = barrier = function(count, fn) {
     var c;
     c = 0;
     return function() {
@@ -219,7 +220,7 @@
       opacity: opacity,
       fill: '#fff',
       fontFamily: 'Helvetica',
-      fontSize: 24,
+      fontSize: 22,
       padding: 20,
       text: text
     });
